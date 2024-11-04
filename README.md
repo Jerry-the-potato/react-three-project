@@ -1,3 +1,8 @@
+
+## 視覺化編輯器
+該專案在初始階段，和朋友討論到 GLSL 沒有 print 功能，所以想實現類似的視覺化介面來調試 GLSL。
+
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
