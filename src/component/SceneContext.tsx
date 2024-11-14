@@ -20,28 +20,30 @@ interface SceneProviderProps {
 const defaultColor = [0.18, 0.45, 0.75];
 // 封裝 Provider
 export const SceneProvider: React.FC<SceneProviderProps> = ({ width, height, children }) => {
-    const boxesRef = useRef(new Float32Array(width * height));
-    const alphasRef = useRef(new Float32Array(width * height));
-    const colorsRef = useRef(new Float32Array(width * height * 3));
-    const positionsRef = useRef(new Float32Array(width * height * 3));
+    const boxesRef = useRef(new Float32Array());
+    const alphasRef = useRef(new Float32Array());
+    const colorsRef = useRef(new Float32Array());
+    const positionsRef = useRef(new Float32Array());
 
     function initial(){
-        boxesRef.current = Float32Array.from({ length: width * height }, () => Math.random() * 9 + 1);
-        colorsRef.current = new Float32Array(width * height * 3);
-        for (let i = 0; i < boxesRef.current.length; i++) {
-            colorsRef.current.set([...defaultColor], i * 3);
-        }
-        alphasRef.current = new Float32Array(width * height).fill(1);
-        function getPosition(i : number){
-            const x = i % width;
-            const y = Math.floor(i / width);
-            const z = -boxesRef.current[i]/2;
-            return [x, y, z];
-        }
-        positionsRef.current = new Float32Array(width * height * 3);
-        for (let i = 0; i < boxesRef.current.length; i++) {
-            positionsRef.current.set(getPosition(i), i * 3); // 設置 x, y, z 的值
-        }
+        // boxesRef.current = Float32Array.from({ length: width * height }, () => Math.random() * 9 + 1);
+        // colorsRef.current = new Float32Array(width * height * 3);
+        // for (let i = 0; i < boxesRef.current.length; i++) {
+        //     colorsRef.current.set([...defaultColor], i * 3);
+        // }
+        // alphasRef.current = new Float32Array(width * height).fill(1);
+        // function getPosition(i : number){
+        //     const x = i % width;
+        //     const y = Math.floor(i / width);
+        //     const z = -boxesRef.current[i]/2;
+        //     return [x, y, z];
+        // }
+        // positionsRef.current = new Float32Array(width * height * 3);
+        // for (let i = 0; i < boxesRef.current.length; i++) {
+        //     positionsRef.current.set(getPosition(i), i * 3); // 設置 x, y, z 的值
+        // }
+
+
     }
     useEffect(() => {
         initial();

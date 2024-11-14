@@ -33,7 +33,8 @@ const fragmentShader : {[key: string]: string} = {
 
 export default function getShaderMaterial(order: string = 'XYZ'){
     return shaderMaterial(
-        { time: 0, scale: new THREE.Vector3()},
+        { time: 0 },
+        // vertex shader
         ` 
         attribute float height;
         attribute vec3 offset;
@@ -43,19 +44,26 @@ export default function getShaderMaterial(order: string = 'XYZ'){
         varying float vAlpha;
         varying float vHeight;
         varying vec3 transformed;
+        uniform float time;
+
         void main() {
         ` + vertexShader['renderBy' + order] +
         `
         gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
+        gl_Position.y += sin(time) * 0.1;
+        gl_Position.x += cos(time) * 0.13;
         vColor = color; // 傳遞顏色
         vAlpha = alpha; // 透明度
         vHeight = height; // 高度
         }`,
+        // fragment shader
         `
         varying vec3 vColor;
         varying float vAlpha;
         varying float vHeight;
         varying vec3 transformed;
+        uniform float time;
+
         void main() {
 
             vec3 lightDir = normalize(vec3(30.0, 30.0, 100.0) - transformed);
@@ -80,7 +88,7 @@ export default function getShaderMaterial(order: string = 'XYZ'){
             // 結合所有邊緣條件
             float isEdge = max(max(isEdgeXY, isEdgeXZ), isEdgeYZ); // 取最大值以判斷是否為邊緣
             
-            gl_FragColor = vec4(mix(vColor, vColor-0.3, isEdge), mix(vAlpha, vAlpha - 0.2, isEdge));
+            gl_FragColor = vec4(mix(baseColor, edgeColor, isEdge), 1.0);
         }
         `
     )

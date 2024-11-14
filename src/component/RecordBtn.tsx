@@ -36,8 +36,11 @@ const RecordBtn = forwardRef<ButtonHandle, RecordBtnProps>(({canvas, audio}, ref
         const column = 1 + Math.floor(Math.sqrt(canvas.length - 1));
         const row = Math.ceil(Math.sqrt(canvas.length - 1));
 
-        mergedCanvas.width = maxWidth * column;
-        mergedCanvas.height = maxHeight * row;
+        // mergedCanvas.width = maxWidth * column;
+        // mergedCanvas.height = maxHeight * row;
+
+        mergedCanvas.width = maxWidth * canvas.length;
+        mergedCanvas.height = maxHeight;
 
         const drawFrames = () => {
             // 清空合併畫布
@@ -48,7 +51,8 @@ const RecordBtn = forwardRef<ButtonHandle, RecordBtnProps>(({canvas, audio}, ref
                 if(canvasRef.current){
                     const w = index % column;
                     const h = Math.floor(index / column);
-                    mergedContext?.drawImage(canvasRef.current, w * maxWidth, h * maxHeight, (w+1) * maxWidth, (h+1) * maxHeight);
+                    // mergedContext?.drawImage(canvasRef.current, w * maxWidth, h * maxHeight, maxWidth, maxHeight);
+                    mergedContext?.drawImage(canvasRef.current, index * maxWidth, 0, maxWidth, maxHeight);
                 }
             });
 

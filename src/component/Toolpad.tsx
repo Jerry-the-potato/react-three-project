@@ -13,12 +13,12 @@ import SlideshowIcon from '@mui/icons-material/Slideshow';
 
 import { AppProvider, type Navigation } from '@toolpad/core/AppProvider';
 import { DashboardLayout } from '@toolpad/core/DashboardLayout';
-import { useDemoRouter } from '@toolpad/core/internal';
+import { useDemoRouter, DemoRouterType } from '@toolpad/core/internal';
 
 import Dashboard from './Dashboard';
-import { ComponentType, useEffect, useState, useRef } from 'react';
+import { ComponentType, useEffect, useState, useRef, useContext  } from 'react';
 import MainGrid from './mainGrid';
-
+import TestGrid from './TestGrid';
 import { useControls, button, buttonGroup, folder } from 'leva'
 
 
@@ -114,11 +114,12 @@ const theme = createTheme({
 
 const components: Record<string, ComponentType> = {
   '/slice/dashboard': Dashboard,
-  '/slice/1': MainGrid
+  '/slice/1': MainGrid,
+  '/slice/2': TestGrid,
 };
-function DemoPageContent({ router, pathname, isFullScreen, setIsFullScreen, setCount } 
-  : { router: any, pathname: string, isFullScreen: boolean, setIsFullScreen: (value: boolean) => void, setCount: Function }) {
-  const Component = components[pathname] || (() => <Typography>NotFound</Typography>);
+function DemoPageContent({ router, isFullScreen, setIsFullScreen, setCount } 
+  : { router: DemoRouterType, isFullScreen: boolean, setIsFullScreen: (value: boolean) => void, setCount: Function }) {
+  const Component = components[router.pathname] || (() => <Typography>NotFound</Typography>);
   const [page, setPage] = useState(0);
   const [reRender, setReRender] = useState(0);
   const slices = useRef<string[]>(pages);
@@ -219,7 +220,7 @@ function DemoPageContent({ router, pathname, isFullScreen, setIsFullScreen, setC
 export default function Toolpad() {
   const router = useDemoRouter('/slice/dashboard');
   useEffect(()=>{
-    router.pathname = '/slice/orders'
+    router.pathname = '/slice/1';
   }, []);
   const [count, setCount] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -237,13 +238,13 @@ export default function Toolpad() {
 
     >
       <DashboardLayout>
-        {!isFullScreen && <DemoPageContent router={router} pathname={router.pathname} isFullScreen={isFullScreen} setIsFullScreen={setIsFullScreen} setCount={setCount}/>}
+        {!isFullScreen && <DemoPageContent router={router} isFullScreen={isFullScreen} setIsFullScreen={setIsFullScreen} setCount={setCount}/>}
       </DashboardLayout>
     </AppProvider>
 
     
     {isFullScreen && <div style={{position:'fixed', top: 0, zIndex: 1202, width:'100%', height:'100%', backgroundColor: 'lightgrey'}}>
-      <DemoPageContent router={router} pathname={router.pathname} isFullScreen={isFullScreen} setIsFullScreen={setIsFullScreen} setCount={setCount} />
+      <DemoPageContent router={router} isFullScreen={isFullScreen} setIsFullScreen={setIsFullScreen} setCount={setCount} />
     </div>}
     </>
   );

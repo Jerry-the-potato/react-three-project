@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { useRef, useState, useEffect, useContext } from 'react'
+import { useRef, useState, useEffect, useLayoutEffect, useContext } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { CameraControls } from '@react-three/drei'
 
@@ -11,43 +11,111 @@ import { SceneContext, SceneProvider } from './SceneContext'; // 確保導入你
 import Scene from './Scene';
 import RecordBtn from './RecordBtn'
 
-
-  
-const width = 100;
-const height = 100;
+import productImage from '@/assets/產品.jpg';
 
 const defaultColor = [0.18, 0.45, 0.75];
 const hotpink = [1.0, 0.41, 0.71]; // [255 / 255, 105 / 255, 180 / 255];
 
 let isStop = true;
 
+let width = 100, height = 100;
 export default function Dashboard(){
-    const boxesRef = useRef(new Float32Array(width * height));
-    const alphasRef = useRef(new Float32Array(width * height));
-    const colorsRef = useRef(new Float32Array(width * height * 3));
-    const positionsRef = useRef(new Float32Array(width * height * 3));
+    const boxesRef = useRef(new Float32Array());
+    const alphasRef = useRef(new Float32Array());
+    const colorsRef = useRef(new Float32Array());
+    const positionsRef = useRef(new Float32Array());
     const [renderCount, setRenderCount] = useState(0);
     function reRender(){
         setRenderCount((prev) => prev + 1);
     }
     function getPosition(i : number){
         const x = i % width;
-        const y = Math.floor(i / width);
+        const y = -Math.floor(i / height);
         const z = -boxesRef.current[i]/2;
         return [x, y, z];
     }
 
     function initial(){
-        boxesRef.current = Float32Array.from({ length: width * height }, () => Math.random() * 9 + 1);
-        colorsRef.current = new Float32Array(width * height * 3);
-        for (let i = 0; i < boxesRef.current.length; i++) {
-            colorsRef.current.set([...defaultColor], i * 3);
+        // boxesRef.current = Float32Array.from({ length: width * height }, () => Math.random() * 9 + 1);
+        // colorsRef.current = new Float32Array(width * height * 3);
+        // for (let i = 0; i < boxesRef.current.length; i++) {
+        //     colorsRef.current.set([...defaultColor], i * 3);
+        // }
+        // alphasRef.current = new Float32Array(width * height).fill(1);
+        // positionsRef.current = new Float32Array(width * height * 3);
+        // for (let i = 0; i < boxesRef.current.length; i++) {
+        //     positionsRef.current.set(getPosition(i), i * 3); // 設置 x, y, z 的值
+        // }
+        const image = new Image();
+    
+        // 載入圖片，並在圖片加載完成後處理
+        image.onload = () => {
+            // 創建 canvas 和 2D 上下文
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 設定畫布大小為圖片的大小
+            canvas.width = image.width;
+            canvas.height = image.height;
+            
+            // 將圖片繪製到畫布上
+            ctx?.drawImage(image, 0, 0);
+            
+            // 獲取畫布的像素數據
+            const imageData = ctx?.getImageData(0, 0, image.width, image.height);
+
+            if (!imageData) {
+                console.error('Failed to get image data');
+                return; // 或者進行其他錯誤處理
+            }
+
+            const data = imageData?.data; // 獲取 RGBA 數據 (每四個值為一個像素：r, g, b, a)
+            
+            // 灰階處理：將 RGB 轉換為灰度值，並填充到 colorsRef
+            function getGap(width: number, height: number){
+                const maxPixel = 128;
+                const max = Math.max(width, height);
+                for(let i = Math.floor(max / maxPixel); i < max; i++){
+                    if(width % i == 0){
+                        return i;
+                    }
+                }
+            }
+            const gap = getGap(image.width, image.height) ?? 1;
+            const w = Math.floor(image.width / gap);
+            const h = Math.floor(image.height / gap);
+            console.log(w, h);
+            width = w;
+            height = h;
+            boxesRef.current = new Float32Array(w * h);
+            colorsRef.current = new Float32Array(w * h * 3);
+            alphasRef.current = new Float32Array(w * h).fill(1);
+            positionsRef.current = new Float32Array(w * h * 3);
+
+            for (let i = 0; i < w * h; i++) {
+                const x = (i % w) * gap; // 依照新的寬度計算 x 座標
+                const y = Math.floor(i / w) * gap; // 依照新的高度計算 y 座標        
+                const pixelIndex = (y * image.width + x) * 4; // 每個像素有 4 個值 (r, g, b, a)
+                const r = data[pixelIndex] ?? 0; // 紅色值
+                const g = data[pixelIndex + 1] ?? 0; // 綠色值
+                const b = data[pixelIndex + 2] ?? 0; // 藍色值
+                
+                // 計算灰度值 (用公式轉換 RGB 為灰度)
+                const gray = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+                
+                // 把灰度值填入 colorsRef (使用灰度值填充 RGB)
+                // colorsRef.current.set([gray / 255, gray / 255, gray / 255], i * 3);
+                colorsRef.current.set([r / 255, g / 255, b / 255], i * 3);
+                
+                // 用來填充 boxesRef 的邏輯 (這裡我們可以根據灰度值來設置箱子的大小)
+                boxesRef.current[i] = gray / 255 * 9 + 1; // 根據灰度值設置大小
+            }
+            for (let i = 0; i < boxesRef.current.length; i++) {
+                positionsRef.current.set(getPosition(i), i * 3); // 設置 x, y, z 的值
+            }
+            reRender();
         }
-        alphasRef.current = new Float32Array(width * height).fill(1);
-        positionsRef.current = new Float32Array(width * height * 3);
-        for (let i = 0; i < boxesRef.current.length; i++) {
-            positionsRef.current.set(getPosition(i), i * 3); // 設置 x, y, z 的值
-        }
+        image.src = productImage; // 替換為你的圖片路徑
     }
 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -61,7 +129,7 @@ export default function Dashboard(){
     function setCamera(){
         if(cameraControlsRef1.current && cameraControlsRef2.current && cameraControlsRef3.current){
             const x = width / 2;
-            const y = height / 2;
+            const y = -height / 2;
             cameraControlsRef1.current.setPosition(x, y, 100);
             cameraControlsRef1.current.setTarget(x, y, 0);
             cameraControlsRef2.current.setPosition(x, y, -100);
@@ -71,7 +139,6 @@ export default function Dashboard(){
         }
         else requestAnimationFrame(setCamera);
     }
-
     useEffect(() => {
         initial();
         requestAnimationFrame(setCamera);
@@ -195,11 +262,15 @@ export default function Dashboard(){
                         p: 2,
                         bgcolor: 'grey.100',
                         '&:hover': {
-                            bgcolor: 'grey.200',
+                            bgcolor: 'grey.300',
                         },
                     }}
                 >
-                    <Canvas ref={canvasRef}>
+                    <Canvas ref={canvasRef}
+                        onCreated={({ gl }) => {
+                            gl.setClearColor(0xeeeeee); // 設置淺藍色背景
+                        }}
+                    >
                         <CameraControls
                             ref={cameraControlsRef1}
                             minDistance={minDistance}
@@ -208,9 +279,6 @@ export default function Dashboard(){
                             dollyToCursor={dollyToCursor}
                             infinityDolly={infinityDolly}
                         />
-                        <ambientLight intensity={Math.PI / 2} />
-                        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} decay={0} intensity={Math.PI} />
-                        <pointLight position={[-10, -10, -10]} decay={0} intensity={Math.PI} />
                         <Scene {...sceneProps} order='XYZ'/>
                     </Canvas>
                 </Grid>
@@ -225,7 +293,11 @@ export default function Dashboard(){
                             bgcolor: 'grey.200',
                         },
                     }}>
-                    <Canvas ref={canvasRef2}>
+                    <Canvas ref={canvasRef2}
+                        onCreated={({ gl }) => {
+                            gl.setClearColor(0xeeeeee); // 設置淺藍色背景
+                        }}
+                    >
                         <CameraControls ref={cameraControlsRef2}/>
                         <Scene {...sceneProps} order='XYZ'/>
                     </Canvas>
@@ -241,7 +313,11 @@ export default function Dashboard(){
                             bgcolor: 'grey.200',
                         },
                     }}>
-                    <Canvas ref={canvasRef3}>
+                    <Canvas ref={canvasRef3}
+                        onCreated={({ gl }) => {
+                            gl.setClearColor(0xeeeeee); // 設置淺藍色背景
+                        }}
+                    >
                         <CameraControls ref={cameraControlsRef3}/>
                         <Scene {...sceneProps} order='XZY'/>
                     </Canvas>

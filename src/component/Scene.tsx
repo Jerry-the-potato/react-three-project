@@ -4,15 +4,11 @@ import { useRef, useState, useEffect, useContext } from 'react'
 import { Path } from '../js/path.js'
 import { SceneContext, SceneProvider } from './SceneContext'; // 確保導入你的 Context
 
-import { extend } from '@react-three/fiber'
+import { extend, useFrame } from '@react-three/fiber'
 import getShaderMaterial from '../js/shader.ts'
 
 const BoxShaderMaterialXYZ = getShaderMaterial('XYZ');
 const BoxShaderMaterialXZY = getShaderMaterial('XZY');
-const material = {
-    'renderByXYZ': <boxShaderMaterialXYZ transparent/>,
-    'renderByXZY': <boxShaderMaterialXZY transparent/>
-}
 
 extend({ BoxShaderMaterialXYZ, BoxShaderMaterialXZY})
 
@@ -64,13 +60,32 @@ let hoverIndex = -1;
 export default function Scene(props: SceneProps) {
     // const {width, height, colorState, setColorState, alphaState, setAlphaState, positionState, setPositionState, order, handleClick} = {...props}
     const meshRef = useRef<THREE.InstancedMesh>(null);
+    const materialRef = useRef<THREE.ShaderMaterial>(null);
+    
+    const material = {
+        'renderByXYZ': <boxShaderMaterialXYZ transparent ref={materialRef} />,
+        'renderByXZY': <boxShaderMaterialXZY transparent ref={materialRef} />
+    }
     const {width, height, boxesRef, colorsRef, alphasRef, positionsRef, reRender, handleClick, order} = {...props}
+    const initialColorsRef = useRef<Float32Array>(colorsRef.current.slice());
+
+    useFrame((state) => {
+        if(materialRef.current){
+            materialRef.current.uniforms.time.value = state.clock.getElapsedTime();
+            // materialRef.current.uniformsNeedUpdate = true;
+            // reRender();
+        }
+    });
     // const { boxesRef, colorsRef, alphasRef, positionsRef } = useContext(SceneContext);
     const pathRef = useRef<any>({});
-    const pathIndex = useRef<number>(0);
+
+
+
+    // 此為共用屬性，要移到父元件
+    const pathIndex = useRef<number>(0); 
     function getPosition(i : number){
         const x = i % width;
-        const y = Math.floor(i / width);
+        const y = -Math.floor(i / width);
         const z = -boxesRef.current[i]/2;
         return [x, y, z];
     }
@@ -107,10 +122,11 @@ export default function Scene(props: SceneProps) {
     return (
         <instancedMesh 
             ref={meshRef} 
-            args={[undefined, undefined, 10000]}
+            args={[undefined, undefined, width * height]}
             onPointerMove={(e) => {
                 const index = e.instanceId!; // 獲取 index 值
                 const newColors = new Float32Array(colorsRef.current);
+                const hotpink = initialColorsRef.current.slice(index * 3, index * 3 + 3).map((v) => 1-v);
                 newColors.set([...hotpink], index * 3);
                 colorsRef.current = newColors;
                 reRender();
@@ -120,7 +136,8 @@ export default function Scene(props: SceneProps) {
             onPointerOut={(e) => {
                 const index = e.instanceId!; // 獲取 index 值
                 const newColors = new Float32Array(colorsRef.current);
-                newColors.set([...defaultColor], index * 3);
+                const initialColor = initialColorsRef.current.slice(index * 3, index * 3 + 3);
+                newColors.set(initialColor, index * 3);
                 colorsRef.current = newColors;
                 reRender();
                 // if(hoverIndex == index) hoverIndex = -1;
@@ -143,8 +160,8 @@ export default function Scene(props: SceneProps) {
                 const lastIndex = pathIndex.current;
                 const lastPath = pathRef.current[lastIndex];
                 lastPath?.newTarget(x, y, z, 30);
-                lastPath?.registerDispose(() => 
-                    delete pathRef.current[lastIndex]
+                lastPath?.registerDispose(() => {
+                    delete pathRef.current[lastIndex]}
                 );
                 
                 pathIndex.current++;
