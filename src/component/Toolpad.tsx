@@ -13,7 +13,7 @@ import SlideshowIcon from '@mui/icons-material/Slideshow';
 
 import { AppProvider, type Navigation } from '@toolpad/core/AppProvider';
 import { DashboardLayout } from '@toolpad/core/DashboardLayout';
-import { useDemoRouter, DemoRouterType } from '@toolpad/core/internal';
+import { useDemoRouter } from '@toolpad/core/internal';
 
 import Dashboard from './Dashboard';
 import { ComponentType, useEffect, useState, useRef, useContext  } from 'react';
@@ -118,7 +118,7 @@ const components: Record<string, ComponentType> = {
   '/slice/test': TestGrid,
 };
 function DemoPageContent({ router, isFullScreen, setIsFullScreen, setCount } 
-  : { router: DemoRouterType, isFullScreen: boolean, setIsFullScreen: (value: boolean) => void, setCount: Function }) {
+  : { router: any, isFullScreen: boolean, setIsFullScreen: (value: boolean) => void, setCount: Function }) {
   const Component = components[router.pathname] || (() => <Typography>NotFound</Typography>);
   const [page, setPage] = useState(0);
   const [reRender, setReRender] = useState(0);
