@@ -69,7 +69,7 @@ const NAVIGATIONbackup: Navigation = [
   },
 ];
 
-const pages = ['dashboard', '1', '2', '3'];
+const pages = ['dashboard', '1', 'test', '3'];
 const NAVIGATION: Navigation = [
   {
     kind: 'header',
@@ -115,7 +115,7 @@ const theme = createTheme({
 const components: Record<string, ComponentType> = {
   '/slice/dashboard': Dashboard,
   '/slice/1': MainGrid,
-  '/slice/2': TestGrid,
+  '/slice/test': TestGrid,
 };
 function DemoPageContent({ router, isFullScreen, setIsFullScreen, setCount } 
   : { router: DemoRouterType, isFullScreen: boolean, setIsFullScreen: (value: boolean) => void, setCount: Function }) {

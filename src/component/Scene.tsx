@@ -116,7 +116,7 @@ export default function Scene(props: SceneProps) {
         hoverPosition();
         return () => {
             console.log("Scene disposed.");
-            meshRef.current?.geometry.dispose();
+            // meshRef.current?.geometry.dispose();
         };
     }, [])
     return (
